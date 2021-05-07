@@ -8,14 +8,19 @@ namespace CreditCardApplications
         private const int HighIncomeThreshold = 100_000;
         private const int LowIncomeThreshold = 20_000;
         private readonly IFrequentFlyerNumberValidator _validator;
+        private readonly FraudLookup _fraudLookup;
 
-        public CreditCardApplicationEvaluator(IFrequentFlyerNumberValidator validator)
+        public CreditCardApplicationEvaluator(IFrequentFlyerNumberValidator validator,
+            FraudLookup fraudLookup = null)
         {
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+            _fraudLookup = fraudLookup;
         }
 
         public CreditCardApplicationDecision Evaluate(CreditCardApplication application)
         {
+            if (_fraudLookup != null && _fraudLookup.IsFraudRisk(application))
+                return CreditCardApplicationDecision.ReferredToHumanFraudRisk;
             if (application.GrossAnnualIncome >= HighIncomeThreshold)
                 return CreditCardApplicationDecision.AutoAccepted;
 
